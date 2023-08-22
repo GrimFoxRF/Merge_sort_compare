@@ -79,7 +79,7 @@ void mergeSortInManyThreads(std::vector<int>& array, int left, int right, int& m
         int middle = left + (right - left) / 2;
 
         std::unique_lock<std::mutex> mutexLock(activeThreadsMutex);
-        if (activeThreads < maxThreads) {
+        if (activeThreads < maxThreads && right - left > 10000) {
             ++activeThreads;
             mutexLock.unlock();
 
