@@ -1,4 +1,5 @@
 ﻿#include "MergeSort.h"
+#include "ThreadPool.h"
 #include <cstdlib>
 #include <future>
 #include <mutex>
@@ -72,7 +73,27 @@ void mergeSortInOneThread(std::vector<int>& array, int left, int right)
         merge(array, left, middle, right);
     }
 }
-//многопоточная сортировка
+void mergeSortInManyThreads(std::vector<int>& array, int left, int right, ThreadPool& pool)
+{
+    if (left < right) {
+        int middle = left + (right - left) / 2;
+
+        std::shared_ptr<std::promise<void>> leftPromise = std::make_shared<std::promise<void>>();
+
+        pool.push_task([&array, left, middle, &pool, leftPromise]() {
+            mergeSortInManyThreads(array, left, middle, pool);
+            leftPromise->set_value();
+            });
+
+        mergeSortInManyThreads(array, middle + 1, right, pool);
+
+        leftPromise->get_future().wait();
+
+        merge(array, left, middle, right);
+    }
+}
+
+/*//многопоточная сортировка
 void mergeSortInManyThreads(std::vector<int>& array, int left, int right, int& maxThreads, int& activeThreads)
 {
     if (left < right) {
@@ -105,7 +126,7 @@ void mergeSortInManyThreads(std::vector<int>& array, int left, int right, int& m
 
         merge(array, left, middle, right);
     }
-}
+}*/
 //получение числа ядер системы
 int coreNumber()
 {
